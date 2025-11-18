@@ -1,17 +1,22 @@
-# Start with a base image containing Java runtime
+# Stage 1: Build the application
+FROM maven:3.9.4-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# Copy the pom.xml and source code
+COPY pom.xml .
+COPY src ./src
+
+# Package the app (Skip tests for faster build)
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run the application
 FROM eclipse-temurin:17-jdk-alpine
 
-# Add Maintainer Info
-LABEL maintainer="Your Name"
+# Copy the jar from build stage
+COPY --from=build /app/target/*.jar app.jar
 
-# JAR file from the target directory
-ARG JAR_FILE=target/*.jar
-
-# Add the jar to the image
-COPY ${JAR_FILE} app.jar
-
-# Expose the port that Spring Boot listens on
+# Expose port 8080 (default in Spring Boot)
 EXPOSE 8080
 
-# Run the jar file
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Start the application
+ENTRYPOINT ["java", "-jar", "/app.jar"]
