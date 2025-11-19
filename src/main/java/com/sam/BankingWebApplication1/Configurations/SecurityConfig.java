@@ -38,6 +38,7 @@ public class SecurityConfig {
                     .authorizeHttpRequests(request -> request
                             .requestMatchers("/smartBank/user/login").permitAll()
                             .requestMatchers("/smartBank/user/logout").permitAll()
+                            .requestMatchers("/smartBank/admin/getAllCustomer").permitAll()
                             .requestMatchers("/smartBank/customer/createCustomer").permitAll()
                             .requestMatchers("/smartBank/user/activate").permitAll()
                             .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
