@@ -4,7 +4,6 @@ import com.sam.BankingWebApplication1.DTOs.CreateCustomerDTO;
 import com.sam.BankingWebApplication1.Services.AdminService;
 import com.sam.BankingWebApplication1.Services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
