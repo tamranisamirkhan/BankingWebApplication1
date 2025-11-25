@@ -18,7 +18,10 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = {"http://localhost:5500"})
+@CrossOrigin(origins = {
+        "https://smartbankofficial.netlify.app",
+        "http://localhost:5500"
+})
 @RestController
 @RequestMapping("/smartBank/user")
 public class UserController {

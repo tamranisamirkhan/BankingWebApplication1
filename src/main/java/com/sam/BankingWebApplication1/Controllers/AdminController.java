@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:5500"})
+@CrossOrigin(origins = {
+        "https://smartbankofficial.netlify.app",
+        "http://localhost:5500"
+})
 @RestController
 @RequestMapping("/smartBank/admin")
 public class AdminController {
