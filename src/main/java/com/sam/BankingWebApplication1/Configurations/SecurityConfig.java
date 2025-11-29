@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // PUBLIC
-                        .requestMatchers("/smartBank/customer/createCustomer").permitAll()
+                        .requestMatchers("/smartBank/customer/createCustomer/**").permitAll()
                         .requestMatchers("/smartBank/user/login").permitAll()
                         .requestMatchers("/smartBank/user/logout").permitAll()
                         .requestMatchers("/smartBank/user/activate").permitAll()
