@@ -7,11 +7,15 @@ import com.sam.BankingWebApplication1.Entities.Customer;
 import com.sam.BankingWebApplication1.Entities.User;
 import com.sam.BankingWebApplication1.Enums.AccountType;
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
+import com.sam.BankingWebApplication1.Exceptions.DuplicateResourceFoundException;
+import com.sam.BankingWebApplication1.Exceptions.TokenExpiredException;
 import com.sam.BankingWebApplication1.Repositories.AccountRepository;
 import com.sam.BankingWebApplication1.Repositories.ActivationTokenRepository;
 import com.sam.BankingWebApplication1.Repositories.CustomerRepository;
 import com.sam.BankingWebApplication1.Repositories.UserRepository;
 import com.sam.BankingWebApplication1.Services.AccountService;
+import com.sam.BankingWebApplication1.Utils.CommonResponse;
+import com.sam.BankingWebApplication1.Utils.ResponseModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -45,15 +49,19 @@ public class ActivationController {
     private AccountService accountService;
 
     @PostMapping("/activate")
-    public String activate(@RequestBody ActivationRequest req) {
+    public ResponseModel activate(@RequestBody ActivationRequest req) {
+
         ActivationToken token = tokenRepo.findByToken(req.getToken())
-                .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+                .orElseThrow(() -> new TokenExpiredException("Invalid or expired token"));
 
         if (token.getExpiryAt().isBefore(LocalDateTime.now())) {
             tokenRepo.delete(token);
-            return "Link expired. Please contact support.";
+            throw new TokenExpiredException("Activation link expired!");
         }
-
+        // Check username already exists
+        if (customerRepo.findByUsername(req.getUsername()).isPresent()) {
+            throw  new DuplicateResourceFoundException("Username already taken!");
+        }
         Customer customer = token.getCustomer();
 
         // Create user
@@ -81,7 +89,7 @@ public class ActivationController {
 
         tokenRepo.delete(token);
 
-        return "Account activated successfully!";
+        return CommonResponse.CREATED("Account activated successfully!");
     }
 
 

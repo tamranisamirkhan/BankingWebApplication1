@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer,Long> {
@@ -21,4 +22,6 @@ public interface CustomerRepository extends JpaRepository<Customer,Long> {
     boolean existsByAadharNumber(@NotEmpty(message = "Aadhar number is required") @Pattern(regexp = "^[0-9]{12}$", message = "Aadhar number must be 12 digits") String aadharNumber);
 
     boolean existsByPanNumber(@NotEmpty(message = "PAN number is required") @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "Invalid PAN format (e.g. ABCDE1234F)") String panNumber);
+
+    Optional<Object> findByUsername(String username);
 }

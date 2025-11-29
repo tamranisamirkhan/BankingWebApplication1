@@ -41,5 +41,11 @@ public class GlobalExceptionHandler {
         String message = ex.getMessage();
         return CommonResponse.BAD_REQUEST(message);
     }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseModel handleTokenExpiredException(TokenExpiredException ex){
+        String message = ex.getMessage();
+        return CommonResponse.BAD_REQUEST(message);
+    }
 }
 

@@ -32,22 +32,29 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            return http
-                    .csrf(AbstractHttpConfigurer::disable)
-                    .cors(Customizer.withDefaults())
-                    .authorizeHttpRequests(request -> request
-                            .requestMatchers("/smartBank/user/login").permitAll()
-                            .requestMatchers("/smartBank/user/logout").permitAll()
-                            .requestMatchers("/smartBank/admin/getAllCustomer").permitAll()
-                            .requestMatchers("/smartBank/customer/createCustomer").permitAll()
-                            .requestMatchers("/smartBank/user/activate").permitAll()
-                            .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
-                            .requestMatchers("/smartBank/customer/**").hasRole("CUSTOMER")
-                            .anyRequest().authenticated())
-                    .sessionManagement(session->session
-                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                    .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                    .build();
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .authorizeHttpRequests(auth -> auth
+
+                        // PUBLIC
+                        .requestMatchers("/smartBank/customer/createCustomer").permitAll()
+                        .requestMatchers("/smartBank/user/login").permitAll()
+                        .requestMatchers("/smartBank/user/logout").permitAll()
+                        .requestMatchers("/smartBank/user/activate").permitAll()
+                        .requestMatchers("/smartBank/admin/getAllCustomer").permitAll()
+
+                        // PROTECTED
+                        .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/smartBank/customer/**").hasRole("CUSTOMER")
+
+                        // EVERYTHING ELSE
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     // ✅ Define allowed origins (your frontend)

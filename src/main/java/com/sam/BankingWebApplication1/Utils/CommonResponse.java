@@ -18,4 +18,8 @@ public class CommonResponse {
     public static ResponseModel CONFLICT(Object data){
         return new ResponseModel(data,null,HttpStatus.CONFLICT);
     }
+    public static ResponseModel GONE(Object error){
+        return new ResponseModel(null,error,HttpStatus.GONE);
+    }
+
 }
