@@ -58,10 +58,6 @@ public class ActivationController {
             tokenRepo.delete(token);
             throw new TokenExpiredException("Activation link expired!");
         }
-        // Check username already exists
-        if (customerRepo.findByUsername(req.getUsername()).isPresent()) {
-            throw  new DuplicateResourceFoundException("Username already taken!");
-        }
         Customer customer = token.getCustomer();
 
         // Create user
