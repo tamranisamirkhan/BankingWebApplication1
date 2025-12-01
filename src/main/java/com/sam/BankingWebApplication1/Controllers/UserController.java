@@ -53,10 +53,10 @@ public class UserController {
         String role = jwtService.extractRole(jwt);
         ResponseCookie cookie = ResponseCookie.from("jwtToken", jwt)
                 .httpOnly(true)
-                .secure(false) // for localhost only
+                .secure(true) // for localhost only
                 .path("/")
                 .maxAge(Duration.ofMinutes(10))
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
