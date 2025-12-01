@@ -42,8 +42,6 @@ public class SecurityConfig {
                         .requestMatchers("/smartBank/user/login").permitAll()
                         .requestMatchers("/smartBank/user/logout").permitAll()
                         .requestMatchers("/smartBank/user/activate").permitAll()
-                        .requestMatchers("/smartBank/admin/getAllCustomer").permitAll()
-
                         // PROTECTED
                         .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
                         .requestMatchers("/smartBank/customer/**").hasRole("CUSTOMER")
@@ -69,7 +67,7 @@ public class SecurityConfig {
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .exposedHeaders("Authorization")
+                        .exposedHeaders("Set-Cookie")
                         .allowCredentials(true);
             }
         };
