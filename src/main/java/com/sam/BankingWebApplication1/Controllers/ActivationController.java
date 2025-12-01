@@ -24,10 +24,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/smartBank/user")
-@CrossOrigin(origins = {
-        "https://smartbankofficial.netlify.app",
-        "http://localhost:5500"
-})
+
 public class ActivationController {
 
     @Autowired
