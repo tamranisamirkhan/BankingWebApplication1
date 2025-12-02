@@ -63,7 +63,8 @@ public class SecurityConfig {
                 registry.addMapping("/**")
                         .allowedOrigins(
                                 "http://localhost:5500",
-                                "https://smartbankofficial.netlify.app"
+                                "https://smartbankofficial.netlify.app",
+                                "https://smartbankofficial.online"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
