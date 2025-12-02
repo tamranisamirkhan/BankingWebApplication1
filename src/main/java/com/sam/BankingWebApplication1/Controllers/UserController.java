@@ -49,12 +49,15 @@ public class UserController {
         String role = jwtService.extractRole(jwt);
         ResponseCookie cookie = ResponseCookie.from("jwtToken", jwt)
                 .httpOnly(true)
-                .secure(true) // for localhost only
+                .secure(true)
                 .path("/")
                 .maxAge(Duration.ofMinutes(10))
                 .sameSite("None")
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        response.setHeader("Access-Control-Allow-Origin", "https://smartbankofficial.netlify.app");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
 
 
         Map<String, Object> responseBody = new HashMap<>();

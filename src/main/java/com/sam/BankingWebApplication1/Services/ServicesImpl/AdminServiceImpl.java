@@ -59,7 +59,7 @@ public class AdminServiceImpl implements AdminService {
         activationTokenRepository.save(activationToken);
 
         // 3 Send email
-        String link = "http://localhost:5500/activate.html?token=" + token;
+        String link = "https://smartbankofficial.netlify.app/pages/activate.html?token=" + token;
         String subject = "SmartBank Account Approved - Set Up Your Login";
         String message = "Dear " + customer.getFullName() + ",\n\n"
                 + "Your SmartBank account has been approved!\n"
