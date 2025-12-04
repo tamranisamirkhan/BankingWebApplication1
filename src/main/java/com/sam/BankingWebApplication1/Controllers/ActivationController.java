@@ -7,7 +7,6 @@ import com.sam.BankingWebApplication1.Entities.Customer;
 import com.sam.BankingWebApplication1.Entities.User;
 import com.sam.BankingWebApplication1.Enums.AccountType;
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
-import com.sam.BankingWebApplication1.Exceptions.DuplicateResourceFoundException;
 import com.sam.BankingWebApplication1.Exceptions.TokenExpiredException;
 import com.sam.BankingWebApplication1.Repositories.AccountRepository;
 import com.sam.BankingWebApplication1.Repositories.ActivationTokenRepository;
@@ -24,7 +23,6 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/smartBank/user")
-
 public class ActivationController {
 
     @Autowired
