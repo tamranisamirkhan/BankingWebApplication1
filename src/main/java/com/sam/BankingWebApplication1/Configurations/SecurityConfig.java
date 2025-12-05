@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/smartBank/customer/createCustomer/**").permitAll()
                         .requestMatchers("/smartBank/user/login").permitAll()
                         .requestMatchers("/smartBank/user/logout").permitAll()
-                        .requestMatchers("/smartBank/user/activate").permitAll()
+                        .requestMatchers("/smartBank/user/activate/**").permitAll()
                         // PROTECTED
                         .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
                         .requestMatchers("/smartBank/customer/**").hasRole("CUSTOMER")
