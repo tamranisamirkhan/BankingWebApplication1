@@ -32,27 +32,31 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
+
+        http.csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.disable())
                 .authorizeHttpRequests(auth -> auth
 
-                        // PUBLIC
-                        .requestMatchers("/smartBank/customer/createCustomer/**").permitAll()
-                        .requestMatchers("/smartBank/user/login").permitAll()
-                        .requestMatchers("/smartBank/user/logout").permitAll()
-                        .requestMatchers("/smartBank/user/activate/**").permitAll()
-                        // PROTECTED
+
+                        .requestMatchers(
+                                "/smartBank/customer/createCustomer/**",
+                                "/smartBank/user/login",
+                                "/smartBank/user/logout",
+                                "/smartBank/user/activate",
+                                "/smartBank/user/activate/**",
+                                "/smartBank/user/activate*"
+                        ).permitAll()
+
+
                         .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
                         .requestMatchers("/smartBank/customer/**").hasRole("CUSTOMER")
 
-                        // EVERYTHING ELSE
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean
