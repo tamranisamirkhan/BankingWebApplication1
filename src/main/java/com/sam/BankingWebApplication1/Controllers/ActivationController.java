@@ -69,6 +69,7 @@ public class ActivationController {
         Account account = new Account();
         account.setAccountNumber(accountService.generateUniqueAccountNumber());
         account.setAccountType(AccountType.SAVINGS);
+        account.setUser(user);
         account.setCustomer(customer);
         account.setBalance(0.0);
         accountRepo.save(account);
