@@ -1,6 +1,7 @@
 package com.sam.BankingWebApplication1.Entities;
 
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
+import com.sam.BankingWebApplication1.Enums.KycStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,5 +47,12 @@ public class Customer {
 
     @OneToOne(mappedBy = "customer" , cascade = CascadeType.ALL)
     private Account account;
+
+    private String aadhaarFrontPath;
+    private String aadhaarBackPath;
+    private String panPath;
+
+    @Enumerated(EnumType.STRING)
+    private KycStatus kycStatus = KycStatus.NOT_SUBMITTED;
 
 }

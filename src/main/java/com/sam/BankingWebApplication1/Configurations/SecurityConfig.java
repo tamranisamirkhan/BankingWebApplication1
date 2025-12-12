@@ -40,6 +40,7 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/smartBank/customer/createCustomer/**",
+                                "/smartBank/customer/upload/kyc/**",
                                 "/smartBank/user/login",
                                 "/smartBank/user/logout",
                                 "/smartBank/user/activate",

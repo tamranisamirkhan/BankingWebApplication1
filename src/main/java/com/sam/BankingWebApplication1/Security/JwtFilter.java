@@ -39,13 +39,13 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = extractToken(request);
         String username = null;
 
-        // 🛑 1. If token is blacklisted, immediately block the request
+//         1. If token is blacklisted, immediately block the request
         if (token != null && tokenBlacklistService.isBlacklisted(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // ✅ 2. Extract username if token exists
+        // 2. Extract username if token exists
         if (token != null) {
             try {
                 username = jwtService.extractUsername(token);
@@ -55,7 +55,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        // ✅ 3. Validate token and set Authentication
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(username);
 
@@ -69,7 +69,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        // ✅ 4. Continue filter chain
+        //  4. Continue filter chain
         filterChain.doFilter(request, response);
     }
 

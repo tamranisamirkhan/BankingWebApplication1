@@ -4,7 +4,9 @@ import com.sam.BankingWebApplication1.DTOs.CreateCustomerDTO;
 import com.sam.BankingWebApplication1.DTOs.RegisterCustomerDTO;
 import com.sam.BankingWebApplication1.Entities.Customer;
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
+import com.sam.BankingWebApplication1.Enums.KycStatus;
 import com.sam.BankingWebApplication1.Exceptions.DuplicateResourceFoundException;
+import com.sam.BankingWebApplication1.Exceptions.ResourceNotFoundException;
 import com.sam.BankingWebApplication1.Repositories.CustomerRepository;
 import com.sam.BankingWebApplication1.Services.CustomerService;
 import com.sam.BankingWebApplication1.Services.EmailService;
@@ -13,6 +15,10 @@ import com.sam.BankingWebApplication1.Utils.ResponseModel;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,7 +51,7 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             Customer customer = mapper.map(customerDTO,Customer.class);
             customer.setStatus(CustomerStatus.PENDING);
-            customerRepo.save(customer);
+            Customer savedCustomer =  customerRepo.save(customer);
             String subject = "SmartBank - Application Received";
             String message = "Dear " + customer.getFullName() + ",\n\n"
                     + "Thank you for registering with SmartBank.\n"
@@ -55,7 +61,7 @@ public class CustomerServiceImpl implements CustomerService {
 
             emailService.sendMail(customer.getEmail(), subject, message);
 
-            return CommonResponse.CREATED("Customer saved successfully and confirmation email sent!");
+            return CommonResponse.CREATED(savedCustomer.getId());
         } catch (Exception e) {
             return CommonResponse.BAD_REQUEST("Customer is not saved");
         }
@@ -70,6 +76,40 @@ public class CustomerServiceImpl implements CustomerService {
         return customers.stream()
                 .map(customer -> mapper.map(customer, CreateCustomerDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ResponseModel uploadKyc(Long customerId, MultipartFile aadhaarFront, MultipartFile aadhaarBack, MultipartFile panCard) {
+
+        Customer customer = customerRepo.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer","Customer Not Found : ", customerId));
+
+        String basePath = "/home/ubuntu/BankingWebApplication1/uploads/kyc/" + customerId;
+        File directory = new File(basePath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        String frontPath = basePath + "/aadhaar_front.jpg";
+        String backPath = basePath + "/aadhaar_back.jpg";
+        String panPath = basePath + "/pan.jpg";
+
+        try {
+            aadhaarFront.transferTo(new File(frontPath));
+            aadhaarBack.transferTo(new File(backPath));
+            panCard.transferTo(new File(panPath));
+        } catch (IOException e) {
+            throw new RuntimeException("Error uploading KYC documents", e);
+        }
+
+        customer.setAadhaarFrontPath(frontPath);
+        customer.setAadhaarBackPath(backPath);
+        customer.setPanPath(panPath);
+        customer.setKycStatus(KycStatus.PENDING);
+
+        customerRepo.save(customer);
+
+        return CommonResponse.OK("KYC documents uploaded successfully. Pending verification.");
     }
 
     @Override
