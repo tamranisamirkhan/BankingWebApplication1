@@ -1,101 +1,74 @@
 package com.sam.BankingWebApplication1.Configurations;
 
-
-
 import com.sam.BankingWebApplication1.Security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
-    @Autowired
-    private UserDetailsService userDetailService;
+
     @Autowired
     private JwtFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.disable())
+        http
+                // 1️⃣ Stateless JWT-based security
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // 2️⃣ Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-
+                        // 🔓 PUBLIC ENDPOINTS (no token)
                         .requestMatchers(
-                                "/smartBank/customer/createCustomer/**",
-                                "/smartBank/customer/upload/kyc/**",
+                                "/smartBank/customer/createCustomer",
                                 "/smartBank/user/login",
-                                "/smartBank/user/logout",
-                                "/smartBank/user/activate",
-                                "/smartBank/user/activate/**",
-                                "/smartBank/user/activate*"
+                                "/smartBank/user/activate/**"
                         ).permitAll()
 
+                        // 🔐 TEMP KYC TOKEN ONLY
+                        .requestMatchers("/smartBank/customer/upload/kyc")
+                        .hasRole("KYC_PENDING")
 
-                        .requestMatchers("/smartBank/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/smartBank/customer/**").hasRole("CUSTOMER")
+                        // 🔐 CUSTOMER APIs (after login)
+                        .requestMatchers("/smartBank/customer/**")
+                        .hasRole("CUSTOMER")
 
+                        // 🔐 ADMIN APIs
+                        .requestMatchers("/smartBank/admin/**")
+                        .hasRole("ADMIN")
+
+                        // 🔒 EVERYTHING ELSE
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 3️⃣ JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // Required for login
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins(
-                                "http://localhost:5500",
-                                "https://smartbankofficial.netlify.app",
-                                "https://smartbankofficial.online"
-                        )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .exposedHeaders("Set-Cookie")
-                        .allowCredentials(true);
-            }
-        };
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
-
-
-    @Bean
-    public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(userDetailService);
-        provider.setPasswordEncoder(new BCryptPasswordEncoder());
-        return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 }
-

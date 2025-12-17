@@ -5,5 +5,6 @@ public enum CustomerStatus {
     APPROVED,
     ACTIVE,
     REJECTED,
+    KYC_PENDING,
     INACTIVE
 }

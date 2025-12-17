@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +33,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private JWTService jwtService;
 
     @Override
     public ResponseModel createNewCustomer(CreateCustomerDTO customerDTO){
@@ -50,8 +54,14 @@ public class CustomerServiceImpl implements CustomerService {
         }
         try {
             Customer customer = mapper.map(customerDTO,Customer.class);
-            customer.setStatus(CustomerStatus.PENDING);
+            customer.setStatus(CustomerStatus.KYC_PENDING);
+            customer.setKycStatus(KycStatus.NOT_SUBMITTED);
             Customer savedCustomer =  customerRepo.save(customer);
+
+            String kycToken = jwtService.generateTemporaryToken(
+                    customer.getEmail(),
+                    savedCustomer.getId()
+            );
             String subject = "SmartBank - Application Received";
             String message = "Dear " + customer.getFullName() + ",\n\n"
                     + "Thank you for registering with SmartBank.\n"
@@ -61,7 +71,11 @@ public class CustomerServiceImpl implements CustomerService {
 
             emailService.sendMail(customer.getEmail(), subject, message);
 
-            return CommonResponse.CREATED(savedCustomer.getId());
+            return CommonResponse.CREATED(Map.of(
+                    "customerId", savedCustomer.getId(),
+                    "kycToken", kycToken
+            ));
+
         } catch (Exception e) {
             return CommonResponse.BAD_REQUEST("Customer is not saved");
         }

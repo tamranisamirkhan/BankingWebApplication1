@@ -18,8 +18,8 @@ import java.util.function.Function;
 
 @Service
 public class JWTService {
-    private String secretKey = "";
 
+    private String secretKey = "";
     private static final long JWT_EXPIRATION_MS = 10 * 60 * 1000;
 
     public JWTService() {
@@ -32,11 +32,15 @@ public class JWTService {
         }
     }
 
-    public String generateToken(String username,String role) {
-        Map<String,Object> claims = new HashMap<>();
-        claims.put("role",role);
+    /* ================= NORMAL LOGIN TOKEN ================= */
+
+    public String generateToken(String username, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + JWT_EXPIRATION_MS);
+
         return Jwts.builder()
                 .claims()
                 .add(claims)
@@ -48,21 +52,58 @@ public class JWTService {
                 .compact();
     }
 
-    private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    /* ================= TEMP KYC TOKEN ================= */
+
+    public String generateTemporaryToken(String email, Long customerId) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("role", "ROLE_KYC_PENDING")
+                .claim("customerId", customerId)
+                .setIssuedAt(new Date())
+                .setExpiration(
+                        new Date(System.currentTimeMillis() + 10 * 60 * 1000)
+                )
+                .signWith(getKey())
+                .compact();
     }
+
+    /* ================= EXTRACTORS ================= */
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    private <T>  T extractClaim(String token, Function<Claims,T> claimResolver) {
-        final Claims claims = extractAllClaim(token);
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
+    }
+
+    public Long extractCustomerId(String token) {
+        return extractAllClaims(token).get("customerId", Long.class);
+    }
+
+    /* ================= VALIDATION ================= */
+
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String userName = extractUsername(token);
+        return userName.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    /* ================= INTERNAL ================= */
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
+        final Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);
     }
 
-    private Claims extractAllClaim(String token) {
+    private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getKey())
                 .build()
@@ -70,20 +111,9 @@ public class JWTService {
                 .getPayload();
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUsername(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
-    private boolean isTokenExpired(String token){
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token,Claims::getExpiration);
-    }
-
-    public String extractRole(String jwt) {
-        return extractClaim(jwt, claims -> claims.get("role", String.class));
+    private SecretKey getKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
+

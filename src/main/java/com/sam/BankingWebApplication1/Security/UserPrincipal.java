@@ -1,5 +1,6 @@
-package com.sam.BankingWebApplication1.Entities;
+package com.sam.BankingWebApplication1.Security;
 
+import com.sam.BankingWebApplication1.Entities.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

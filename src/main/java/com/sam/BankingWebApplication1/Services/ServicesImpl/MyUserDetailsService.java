@@ -1,7 +1,7 @@
 package com.sam.BankingWebApplication1.Services.ServicesImpl;
 
 import com.sam.BankingWebApplication1.Entities.User;
-import com.sam.BankingWebApplication1.Entities.UserPrincipal;
+import com.sam.BankingWebApplication1.Security.UserPrincipal;
 import com.sam.BankingWebApplication1.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
