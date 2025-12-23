@@ -83,7 +83,7 @@ public class SecurityConfig {
         ));
 
         // JWT via Authorization header → credentials not required
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
