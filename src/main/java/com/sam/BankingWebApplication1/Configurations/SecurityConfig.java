@@ -35,14 +35,10 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsService userDetailService;
 
-    /* ================= PASSWORD ENCODER ================= */
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    /* ================= AUTHENTICATION PROVIDER ================= */
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -54,7 +50,6 @@ public class SecurityConfig {
         return provider;
     }
 
-    /* ================= AUTHENTICATION MANAGER ================= */
 
     @Bean
     public AuthenticationManager authenticationManager(
@@ -62,7 +57,6 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    /* ================= CORS CONFIG ================= */
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -82,7 +76,6 @@ public class SecurityConfig {
                 "Content-Type"
         ));
 
-        // JWT via Authorization header → credentials not required
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
@@ -92,52 +85,33 @@ public class SecurityConfig {
         return source;
     }
 
-    /* ================= SECURITY FILTER CHAIN ================= */
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                // 🔐 Stateless JWT security
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // ✅ Explicit authentication provider
                 .authenticationProvider(authenticationProvider())
-
-                // 🔑 Authorization rules
                 .authorizeHttpRequests(auth -> auth
-
-                        // Allow CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Public endpoints
                         .requestMatchers(
                                 "/smartBank/customer/createCustomer",
                                 "/smartBank/user/login",
+                                "/smartBank/user/logout",
+                                "/smartBank/user/activate",
                                 "/smartBank/user/activate/**"
                         ).permitAll()
-
-                        // Temporary KYC token access
                         .requestMatchers("/smartBank/customer/upload/kyc")
                         .hasRole("KYC_PENDING")
-
-                        // Customer APIs
                         .requestMatchers("/smartBank/customer/**")
                         .hasRole("CUSTOMER")
-
-                        // Admin APIs
                         .requestMatchers("/smartBank/admin/**")
                         .hasRole("ADMIN")
-
-                        // Everything else
                         .anyRequest().authenticated()
                 )
-
-                // JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
