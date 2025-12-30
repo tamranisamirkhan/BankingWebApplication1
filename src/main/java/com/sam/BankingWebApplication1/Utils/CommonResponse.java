@@ -22,4 +22,7 @@ public class CommonResponse {
         return new ResponseModel(null,error,HttpStatus.GONE);
     }
 
+    public static ResponseModel INTERNAL_SERVER_ERROR(Object error) {
+        return new ResponseModel(null,error,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

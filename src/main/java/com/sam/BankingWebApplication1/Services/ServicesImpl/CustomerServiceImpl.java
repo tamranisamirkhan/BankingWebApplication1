@@ -3,15 +3,18 @@ package com.sam.BankingWebApplication1.Services.ServicesImpl;
 import com.sam.BankingWebApplication1.DTOs.CreateCustomerDTO;
 import com.sam.BankingWebApplication1.DTOs.RegisterCustomerDTO;
 import com.sam.BankingWebApplication1.Entities.Customer;
+import com.sam.BankingWebApplication1.Entities.KycToken;
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
 import com.sam.BankingWebApplication1.Enums.KycStatus;
 import com.sam.BankingWebApplication1.Exceptions.DuplicateResourceFoundException;
-import com.sam.BankingWebApplication1.Exceptions.ResourceNotFoundException;
+import com.sam.BankingWebApplication1.Exceptions.TokenExpiredException;
 import com.sam.BankingWebApplication1.Repositories.CustomerRepository;
+import com.sam.BankingWebApplication1.Repositories.KycTokenRepository;
 import com.sam.BankingWebApplication1.Services.CustomerService;
 import com.sam.BankingWebApplication1.Services.EmailService;
 import com.sam.BankingWebApplication1.Utils.CommonResponse;
 import com.sam.BankingWebApplication1.Utils.ResponseModel;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,14 +22,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private CustomerRepository customerRepo;
+
+    @Autowired
+    private KycTokenRepository kycTokenRepository;
 
     @Autowired
     private ModelMapper mapper;
@@ -38,8 +48,10 @@ public class CustomerServiceImpl implements CustomerService {
     private JWTService jwtService;
 
     @Override
-    public ResponseModel createNewCustomer(CreateCustomerDTO customerDTO){
+    @Transactional
+    public ResponseModel createNewCustomer(CreateCustomerDTO customerDTO) {
 
+        // 1. Duplicate validations
         if (customerRepo.existsByEmail(customerDTO.getEmail())) {
             throw new DuplicateResourceFoundException("Email already exists");
         }
@@ -52,33 +64,53 @@ public class CustomerServiceImpl implements CustomerService {
         if (customerRepo.existsByPanNumber(customerDTO.getPanNumber())) {
             throw new DuplicateResourceFoundException("PAN number already exists");
         }
-        try {
-            Customer customer = mapper.map(customerDTO,Customer.class);
-            customer.setStatus(CustomerStatus.KYC_PENDING);
-            customer.setKycStatus(KycStatus.NOT_SUBMITTED);
-            Customer savedCustomer =  customerRepo.save(customer);
 
-            String kycToken = jwtService.generateTemporaryToken(
-                    customer.getEmail(),
-                    savedCustomer.getId()
-            );
-            String subject = "SmartBank - Application Received";
-            String message = "Dear " + customer.getFullName() + ",\n\n"
-                    + "Thank you for registering with SmartBank.\n"
-                    + "Your application has been received successfully.\n"
-                    + "Our admin team will review your details and notify you once approved.\n\n"
-                    + "Best regards,\nSmartBank Team";
+        // 2. Create and save customer
+        Customer customer = mapper.map(customerDTO, Customer.class);
+        customer.setStatus(CustomerStatus.KYC_PENDING);
+        customer.setKycStatus(KycStatus.NOT_SUBMITTED);
 
-            emailService.sendMail(customer.getEmail(), subject, message);
+        Customer savedCustomer = customerRepo.save(customer);
 
-            return CommonResponse.CREATED(Map.of(
-                    "customerId", savedCustomer.getId(),
-                    "kycToken", kycToken
-            ));
+        // 3. Generate secure KYC token (24 hours)
+        String token = UUID.randomUUID().toString();
 
-        } catch (Exception e) {
-            return CommonResponse.BAD_REQUEST("Customer is not saved");
-        }
+        KycToken kycToken = new KycToken();
+        kycToken.setToken(token);
+        kycToken.setCustomer(savedCustomer);
+        kycToken.setExpiresAt(LocalDateTime.now().plusHours(24));
+        kycToken.setUsed(false);
+
+        kycTokenRepository.save(kycToken);
+
+        // 4. Send KYC completion email
+        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        String kycLink =
+                "https://smartbankofficial.netlify.app/pages/kyc-upload.html?token=" + encodedToken;
+
+
+        String subject = "Complete Your SmartBank KYC (Valid for 24 Hours)";
+        String message =
+                "Dear " + savedCustomer.getFullName() + ",\n\n"
+                        + "Thank you for registering with SmartBank.\n"
+                        + "Your application has been submitted successfully.\n\n"
+                        + "Please complete your KYC within 24 hours using the link below:\n"
+                        + kycLink + "\n\n"
+                        + "If you did not initiate this request, please ignore this email.\n\n"
+                        + "Regards,\n"
+                        + "SmartBank Team";
+
+        emailService.sendMail(savedCustomer.getEmail(), subject, message);
+
+        // 5. Response to frontend (NO token exposed)
+        return CommonResponse.CREATED(Map.of(
+                "message",
+                "Application submitted successfully. "
+                        + "A KYC link has been sent to your registered email address. "
+                        + "Please complete KYC within 24 hours."
+
+        ));
     }
 
     @Override
@@ -93,12 +125,32 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public ResponseModel uploadKyc(Long customerId, MultipartFile aadhaarFront, MultipartFile aadhaarBack, MultipartFile panCard) {
+    @Transactional
+    public ResponseModel uploadKyc(
+            String token,
+            MultipartFile aadhaarFront,
+            MultipartFile aadhaarBack,
+            MultipartFile panCard
+    ) throws IOException {
 
-        Customer customer = customerRepo.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer","Customer Not Found : ", customerId));
+        KycToken kycToken = kycTokenRepository
+                .findByTokenAndUsedFalse(token)
+                .orElseThrow(() ->
+                        new TokenExpiredException("Invalid or expired KYC link")
+                );
 
-        String basePath = "/home/ubuntu/BankingWebApplication1/uploads/kyc/" + customerId;
+        if (kycToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new TokenExpiredException("KYC link expired");
+        }
+
+        Customer customer = kycToken.getCustomer();
+
+        if (customer.getKycStatus() != KycStatus.NOT_SUBMITTED) {
+            throw new RuntimeException("KYC already submitted");
+        }
+
+        // 📁 File storage
+        String basePath = "/home/ubuntu/BankingWebApplication1/uploads/kyc/" + customer.getId();
         File directory = new File(basePath);
         if (!directory.exists()) {
             directory.mkdirs();
@@ -108,23 +160,38 @@ public class CustomerServiceImpl implements CustomerService {
         String backPath = basePath + "/aadhaar_back.jpg";
         String panPath = basePath + "/pan.jpg";
 
-        try {
-            aadhaarFront.transferTo(new File(frontPath));
-            aadhaarBack.transferTo(new File(backPath));
-            panCard.transferTo(new File(panPath));
-        } catch (IOException e) {
-            throw new RuntimeException("Error uploading KYC documents", e);
-        }
+        aadhaarFront.transferTo(new File(frontPath));
+        aadhaarBack.transferTo(new File(backPath));
+        panCard.transferTo(new File(panPath));
 
         customer.setAadhaarFrontPath(frontPath);
         customer.setAadhaarBackPath(backPath);
         customer.setPanPath(panPath);
-        customer.setKycStatus(KycStatus.PENDING);
+        customer.setKycStatus(KycStatus.SUBMITTED);
 
         customerRepo.save(customer);
 
-        return CommonResponse.OK("KYC documents uploaded successfully. Pending verification.");
+        kycToken.setUsed(true);
+        kycTokenRepository.save(kycToken);
+
+        emailService.sendMail(
+                customer.getEmail(),
+                "SmartBank – KYC Documents Received",
+                "Dear " + customer.getFullName() + ",\n\n"
+                        + "We have successfully received your KYC documents.\n\n"
+                        + "Our team will review your application shortly.\n"
+                        + "You will be notified once the review is completed.\n\n"
+                        + "Thank you for choosing SmartBank.\n\n"
+                        + "Regards,\n"
+                        + "SmartBank Team"
+        );
+
+
+        return CommonResponse.OK(
+                "KYC documents uploaded successfully. Pending verification."
+        );
     }
+
 
     @Override
     public String registerCustomer(RegisterCustomerDTO customerDTO) {

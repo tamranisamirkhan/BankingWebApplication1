@@ -99,19 +99,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/smartBank/customer/createCustomer",
+                                "/smartBank/customer/upload/kyc",
                                 "/smartBank/user/login",
                                 "/smartBank/user/logout",
                                 "/smartBank/user/activate",
                                 "/smartBank/user/activate/**"
                         ).permitAll()
-                        .requestMatchers("/smartBank/customer/upload/kyc")
-                        .hasRole("KYC_PENDING")
                         .requestMatchers("/smartBank/customer/**")
                         .hasRole("CUSTOMER")
                         .requestMatchers("/smartBank/admin/**")
                         .hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

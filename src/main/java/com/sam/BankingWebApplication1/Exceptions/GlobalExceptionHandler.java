@@ -47,5 +47,18 @@ public class GlobalExceptionHandler {
         String message = ex.getMessage();
         return CommonResponse.BAD_REQUEST(message);
     }
+    // 🔴 ADD THIS (VERY IMPORTANT)
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseModel handleRuntimeException(RuntimeException ex) {
+        return CommonResponse.BAD_REQUEST(ex.getMessage());
+    }
+
+    // 🔴 ADD THIS (FINAL SAFETY NET)
+    @ExceptionHandler(Exception.class)
+    public ResponseModel handleGeneralException(Exception ex) {
+        return CommonResponse.INTERNAL_SERVER_ERROR(
+                "Something went wrong. Please try again later."
+        );
+    }
 }
 

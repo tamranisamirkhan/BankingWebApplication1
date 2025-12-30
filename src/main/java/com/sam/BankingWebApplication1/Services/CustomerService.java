@@ -6,6 +6,7 @@ import com.sam.BankingWebApplication1.Utils.ResponseModel;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -19,5 +20,5 @@ public interface CustomerService {
 
     List<CreateCustomerDTO> getCustomersByStatus(String upperCase);
 
-    ResponseModel uploadKyc(Long customerId, MultipartFile aadhaarFront, MultipartFile aadhaarBack, MultipartFile panCard);
+    ResponseModel uploadKyc(String token, MultipartFile aadhaarFront, MultipartFile aadhaarBack, MultipartFile panCard) throws IOException;
 }
