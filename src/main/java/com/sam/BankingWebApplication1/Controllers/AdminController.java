@@ -1,9 +1,11 @@
 package com.sam.BankingWebApplication1.Controllers;
 
 import com.sam.BankingWebApplication1.DTOs.CreateCustomerDTO;
+import com.sam.BankingWebApplication1.Enums.KycStatus;
 import com.sam.BankingWebApplication1.Services.AdminService;
 import com.sam.BankingWebApplication1.Services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +23,15 @@ public class AdminController {
     public List<CreateCustomerDTO> getAllCustomers(@RequestParam String status) {
         return customerService.getCustomersByStatus(status.toUpperCase());
     }
+    @GetMapping("/kyc")
+    public ResponseEntity<List<CreateCustomerDTO>> getKycQueue(
+            @RequestParam KycStatus status
+    ) {
+        return ResponseEntity.ok(
+                customerService.getKycQueue(status)
+        );
+    }
+
     @PostMapping("/approveCustomer/{id}")
     public String createUser(@PathVariable int id){
         return adminService.approveCustomer(id);

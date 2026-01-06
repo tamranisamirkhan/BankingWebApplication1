@@ -67,7 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         // 2. Create and save customer
         Customer customer = mapper.map(customerDTO, Customer.class);
-        customer.setStatus(CustomerStatus.KYC_PENDING);
+        customer.setStatus(CustomerStatus.PENDING);
         customer.setKycStatus(KycStatus.NOT_SUBMITTED);
 
         Customer savedCustomer = customerRepo.save(customer);
@@ -111,6 +111,16 @@ public class CustomerServiceImpl implements CustomerService {
                         + "Please complete KYC within 24 hours."
 
         ));
+    }
+
+    @Override
+    public List<CreateCustomerDTO> getKycQueue(KycStatus status) {
+        List<Customer> customers =
+                customerRepo.findByKycStatus(status);
+
+        return customers.stream()
+                .map(customer -> mapper.map(customer,CreateCustomerDTO.class))
+                .toList();
     }
 
     @Override

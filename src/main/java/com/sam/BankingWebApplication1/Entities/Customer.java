@@ -39,7 +39,7 @@ public class Customer {
     @Column(nullable = false,unique = true)
     private String panNumber;
     @Enumerated(EnumType.STRING)
-    private CustomerStatus status = CustomerStatus.KYC_PENDING;
+    private CustomerStatus status = CustomerStatus.PENDING;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "customer",cascade = CascadeType.ALL)

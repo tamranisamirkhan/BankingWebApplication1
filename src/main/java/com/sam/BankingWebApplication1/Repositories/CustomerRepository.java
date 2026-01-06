@@ -2,6 +2,7 @@ package com.sam.BankingWebApplication1.Repositories;
 
 import com.sam.BankingWebApplication1.Entities.Customer;
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
+import com.sam.BankingWebApplication1.Enums.KycStatus;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -14,6 +15,8 @@ import java.util.List;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer,Long> {
     List<Customer> findByStatus(CustomerStatus status);
+    List<Customer> findByKycStatus(KycStatus kycStatus);
+
 
     boolean existsByEmail(@NotEmpty(message = "Email is required") @Email(message = "Invalid email address") String email);
 

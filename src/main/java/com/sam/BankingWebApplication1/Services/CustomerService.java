@@ -2,6 +2,7 @@ package com.sam.BankingWebApplication1.Services;
 
 import com.sam.BankingWebApplication1.DTOs.CreateCustomerDTO;
 import com.sam.BankingWebApplication1.DTOs.RegisterCustomerDTO;
+import com.sam.BankingWebApplication1.Enums.KycStatus;
 import com.sam.BankingWebApplication1.Utils.ResponseModel;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,7 @@ public interface CustomerService {
 
     ResponseModel createNewCustomer(CreateCustomerDTO customerDTO);
 
+    List<CreateCustomerDTO> getKycQueue(KycStatus status);
 
 
     String registerCustomer(RegisterCustomerDTO customerDTO);
