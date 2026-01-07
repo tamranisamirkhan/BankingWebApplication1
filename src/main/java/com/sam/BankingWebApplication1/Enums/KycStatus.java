@@ -4,5 +4,6 @@ public enum KycStatus {
     NOT_SUBMITTED,
     PENDING,
     SUBMITTED,
-    REJECTED
+    REJECTED,
+    VERIFIED
 }

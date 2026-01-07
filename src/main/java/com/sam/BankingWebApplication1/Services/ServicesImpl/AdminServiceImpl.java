@@ -1,8 +1,10 @@
 package com.sam.BankingWebApplication1.Services.ServicesImpl;
 
+import com.sam.BankingWebApplication1.DTOs.KycReviewDTO;
 import com.sam.BankingWebApplication1.Entities.ActivationToken;
 import com.sam.BankingWebApplication1.Entities.Customer;
 import com.sam.BankingWebApplication1.Enums.CustomerStatus;
+import com.sam.BankingWebApplication1.Enums.KycStatus;
 import com.sam.BankingWebApplication1.Exceptions.ResourceNotFoundException;
 import com.sam.BankingWebApplication1.Repositories.AccountRepository;
 import com.sam.BankingWebApplication1.Repositories.ActivationTokenRepository;
@@ -11,6 +13,8 @@ import com.sam.BankingWebApplication1.Repositories.UserRepository;
 import com.sam.BankingWebApplication1.Services.AccountService;
 import com.sam.BankingWebApplication1.Services.AdminService;
 import com.sam.BankingWebApplication1.Services.EmailService;
+import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +44,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ModelMapper mapper;
 
     @Override
     public String approveCustomer(int id) {
@@ -106,5 +113,81 @@ public class AdminServiceImpl implements AdminService {
       customerRepository.deleteById((long)id);
       return "Done";
     }
+
+    @Override
+    public KycReviewDTO getKycDetails(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer", "id", customerId));
+
+        if (customer.getKycStatus() == KycStatus.NOT_SUBMITTED) {
+            throw new IllegalStateException("KYC not submitted yet");
+        }
+
+        return mapper.map(customer,KycReviewDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public void approveKyc(Long customerId) {
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer", "id", customerId));
+
+        // 🔒 Safety check
+        if (customer.getKycStatus() != KycStatus.SUBMITTED) {
+            throw new IllegalStateException("KYC already processed");
+        }
+
+        customer.setKycStatus(KycStatus.VERIFIED);
+        customer.setStatus(CustomerStatus.APPROVED);
+
+        customerRepository.save(customer);
+
+        // 📧 Send activation email
+        emailService.sendMail(
+                customer.getEmail(),
+                "SmartBank – KYC Approved",
+                "Dear " + customer.getFullName() + ",\n\n" +
+                        "Your KYC has been successfully verified.\n" +
+                        "Your account is now approved.\n\n" +
+                        "Regards,\nSmartBank Team"
+        );
+    }
+
+    @Override
+    @Transactional
+    public void rejectKyc(Long customerId, String reason) {
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer", "id", customerId));
+
+        // 🔒 Safety check
+        if (customer.getKycStatus() != KycStatus.SUBMITTED) {
+            throw new IllegalStateException("KYC already processed");
+        }
+
+        customer.setKycStatus(KycStatus.REJECTED);
+        customer.setKycRejectionReason(reason); // add column if missing
+
+        customerRepository.save(customer);
+
+        // 📧 Rejection email
+        emailService.sendMail(
+                customer.getEmail(),
+                "SmartBank – KYC Rejected",
+                "Dear " + customer.getFullName() + ",\n\n" +
+                        "Your KYC was rejected for the following reason:\n" +
+                        reason + "\n\n" +
+                        "Please re-apply with correct documents.\n\n" +
+                        "Regards,\nSmartBank Team"
+        );
+    }
+
 
 }
