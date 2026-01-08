@@ -6,8 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.Date;
 
-import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,7 +18,7 @@ public class KycReviewDTO {
     private String fullName;
     private String email;
     private String phoneNumber;
-    private LocalDate bod;
+    private Date bod;
     private String address;
 
     private KycStatus kycStatus;
