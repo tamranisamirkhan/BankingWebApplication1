@@ -48,6 +48,7 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private ModelMapper mapper;
 
+    @Deprecated
     @Override
     public String approveCustomer(int id) {
         Customer customer = customerRepository.findById((long) id)
@@ -80,7 +81,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
 
-
+    @Deprecated
     @Override
     public String rejectCustomer(int id) {
         Customer customer = customerRepository.findById((long)id).orElseThrow(()->
@@ -134,28 +135,49 @@ public class AdminServiceImpl implements AdminService {
 
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Customer", "id", customerId));
+                        new ResourceNotFoundException("Customer", "id", customerId));
 
-        // 🔒 Safety check
+        // 🔒 Safety check: prevent double approval
         if (customer.getKycStatus() != KycStatus.SUBMITTED) {
             throw new IllegalStateException("KYC already processed");
         }
 
+        // 1️⃣ Update KYC + customer status
         customer.setKycStatus(KycStatus.VERIFIED);
         customer.setStatus(CustomerStatus.APPROVED);
-
         customerRepository.save(customer);
 
-        // 📧 Send activation email
-        emailService.sendMail(
-                customer.getEmail(),
-                "SmartBank – KYC Approved",
+        // 2️⃣ Generate activation token
+        String token = UUID.randomUUID().toString();
+
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setToken(token);
+        activationToken.setCustomer(customer);
+        activationToken.setExpiryAt(LocalDateTime.now().plusHours(24));
+        activationToken.setUsed(false);
+
+        activationTokenRepository.save(activationToken);
+
+        // 3️⃣ Build activation link
+        String activationLink =
+                "https://smartbankofficial.netlify.app/pages/active-account.html?token=" + token;
+
+        // 4️⃣ Send combined approval + activation email
+        String subject = "SmartBank – KYC Approved | Activate Your Account";
+
+        String message =
                 "Dear " + customer.getFullName() + ",\n\n" +
-                        "Your KYC has been successfully verified.\n" +
-                        "Your account is now approved.\n\n" +
-                        "Regards,\nSmartBank Team"
-        );
+                        "We are pleased to inform you that your KYC has been successfully verified " +
+                        "and your SmartBank account has been approved.\n\n" +
+                        "To activate your account and set your login credentials, please click the " +
+                        "secure link below:\n\n" +
+                        activationLink + "\n\n" +
+                        "This link will expire in 24 hours.\n\n" +
+                        "For security reasons, please do not share this link with anyone.\n\n" +
+                        "Regards,\n" +
+                        "SmartBank Team";
+
+        emailService.sendMail(customer.getEmail(), subject, message);
     }
 
     @Override

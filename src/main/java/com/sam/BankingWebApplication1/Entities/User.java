@@ -32,8 +32,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+
+    @Column(nullable = false)
+    private String transactionPin;
+
     @Column(nullable = false,length = 20)
-    private String role = "ADMIN";
+    private String role = "CUSTOMER";
+
+    private boolean isActive=false;
 
     private boolean enabled = true;
     private boolean accountNonLocked = true;

@@ -20,10 +20,7 @@ public class KycReviewDTO {
     private String phoneNumber;
     private Date bod;
     private String address;
-
     private KycStatus kycStatus;
-
-    // OPTIONAL but useful
     private CustomerStatus customerStatus;
 }
 

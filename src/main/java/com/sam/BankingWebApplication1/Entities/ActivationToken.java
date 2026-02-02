@@ -31,7 +31,6 @@ public class ActivationToken {
     // when this token expires
     private LocalDateTime expiryAt;
 
-
-
+    private boolean isUsed;
 }
 

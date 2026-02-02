@@ -56,9 +56,6 @@ public class AdminController {
         return ResponseEntity.ok("KYC rejected");
     }
 
-
-
-
     @PostMapping("/approveCustomer/{id}")
     public String createUser(@PathVariable int id){
         return adminService.approveCustomer(id);
