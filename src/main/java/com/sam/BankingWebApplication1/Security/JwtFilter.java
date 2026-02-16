@@ -37,6 +37,11 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        System.out.println("==== FILTER HIT ====");
+        System.out.println("PATH: " + request.getServletPath());
+        System.out.println("TOKEN: " + extractToken(request));
+
+
         String token = extractToken(request);
 
         if (token != null) {

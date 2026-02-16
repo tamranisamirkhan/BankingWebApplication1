@@ -51,6 +51,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public ResponseModel createNewCustomer(CreateCustomerDTO customerDTO) {
 
+        System.out.println("=== CONTROLLER HIT ===");
+
+
         // 1. Duplicate validations
         if (customerRepo.existsByEmail(customerDTO.getEmail())) {
             throw new DuplicateResourceFoundException("Email already exists");
