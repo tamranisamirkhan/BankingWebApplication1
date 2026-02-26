@@ -71,7 +71,8 @@ public class ActivationServiceImpl implements ActivationService {
 
         // 3️⃣ Create USER
         User user = new User();
-        user.setUsername(customer.getEmail()); // auto username
+        user.setUsername(customer.getFullName());
+        user.setEmail(customer.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
         user.setTransactionPin(encoder.encode(req.getTransactionPin()));
         user.setRole("CUSTOMER");
