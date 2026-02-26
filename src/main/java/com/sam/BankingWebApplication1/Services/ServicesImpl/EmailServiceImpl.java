@@ -21,6 +21,9 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendMail(String to, String subject, String message) {
 
+        System.out.println(">>> EMAIL SERVICE HIT");
+        System.out.println("Sending to: " + to);
+        System.out.println("FROM EMAIL: " + from);
         try {
             SimpleMailMessage email = new SimpleMailMessage();
             email.setFrom(from);
@@ -29,8 +32,10 @@ public class EmailServiceImpl implements EmailService {
             email.setText(message);
 
             mailSender.send(email);
+            System.out.println(">>> EMAIL SENT SUCCESSFULLY");
 
         } catch (Exception e) {
+            System.out.println(">>> EMAIL ERROR OCCURRED");
             throw new RuntimeException("SMTP email sending failed", e);
         }
     }

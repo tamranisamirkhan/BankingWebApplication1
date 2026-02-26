@@ -103,8 +103,9 @@ public class CustomerServiceImpl implements CustomerService {
                         + "If you did not initiate this request, please ignore this email.\n\n"
                         + "Regards,\n"
                         + "SmartBank Team";
-
+            System.out.println(">>> BEFORE EMAIL CALL");
             emailService.sendMail(savedCustomer.getEmail(), subject, message);
+            System.out.println(">>> AFTER EMAIL CALL");
 
         // 5. Response to frontend (NO token exposed)
         return CommonResponse.CREATED(Map.of(
