@@ -73,6 +73,7 @@ public class ActivationServiceImpl implements ActivationService {
         User user = new User();
         user.setUsername(customer.getFullName());
         user.setEmail(customer.getEmail());
+        user.setPhoneNumber(customer.getPhoneNumber());
         user.setPassword(encoder.encode(req.getPassword()));
         user.setTransactionPin(encoder.encode(req.getTransactionPin()));
         user.setRole("CUSTOMER");
