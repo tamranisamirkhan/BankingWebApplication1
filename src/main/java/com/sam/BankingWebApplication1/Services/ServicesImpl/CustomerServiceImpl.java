@@ -104,7 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
                         + "Regards,\n"
                         + "SmartBank Team";
 
-//        emailService.sendMail(savedCustomer.getEmail(), subject, message);
+            emailService.sendMail(savedCustomer.getEmail(), subject, message);
 
         // 5. Response to frontend (NO token exposed)
         return CommonResponse.CREATED(Map.of(
