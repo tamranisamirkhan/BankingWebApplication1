@@ -33,6 +33,7 @@ public class Customer {
     private String state;
     private String country;
     private String pincode;
+
     private String kycRejectionReason;
     @Column(nullable = false, unique = true)
     private String aadharNumber;
