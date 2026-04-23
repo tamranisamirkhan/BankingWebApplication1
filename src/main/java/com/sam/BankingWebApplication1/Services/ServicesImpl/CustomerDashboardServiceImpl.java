@@ -30,7 +30,7 @@ public class CustomerDashboardServiceImpl implements CustomerDashboardService {
     private final TransactionRepository transactionRepo;
     @Override
     public ResponseModel getDashboard(Authentication authentication) {
-        // 1. Get logged in user (your security setup)
+        // 1. Get logged_in user (your security setup)
         UserPrincipal principal =
                 (UserPrincipal) authentication.getPrincipal();
 
@@ -65,7 +65,7 @@ public class CustomerDashboardServiceImpl implements CustomerDashboardService {
                         .map(tx -> new RecentTransactionDTO(
                                 tx.getTransactionDate().toLocalDate(),
                                 tx.getDescription(),
-                                tx.getType(),
+                                tx.getType().name(),
                                 tx.getAmount(),
                                 tx.getStatus().name()
                         ))
