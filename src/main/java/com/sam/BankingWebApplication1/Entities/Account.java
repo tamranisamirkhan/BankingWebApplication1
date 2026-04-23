@@ -41,7 +41,7 @@ public class Account {
     @JoinColumn(name="customer_id",unique = true)
     private Customer customer;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

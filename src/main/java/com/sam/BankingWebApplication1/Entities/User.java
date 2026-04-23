@@ -44,8 +44,8 @@ public class User {
     private boolean enabled = true;
     private boolean accountNonLocked = true;
     private int failedLoginAttempts = 1;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Account> accounts = new ArrayList<>();
+    @OneToOne(mappedBy = "user")
+    private Account account;
     @OneToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;

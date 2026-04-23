@@ -4,6 +4,8 @@ import com.sam.BankingWebApplication1.DTOs.LoginRequestDTO;
 import com.sam.BankingWebApplication1.Services.ServicesImpl.JWTService;
 import com.sam.BankingWebApplication1.Services.ServicesImpl.TokenBlacklistService;
 import com.sam.BankingWebApplication1.Services.UserService;
+import com.sam.BankingWebApplication1.Utils.CommonResponse;
+import com.sam.BankingWebApplication1.Utils.ResponseModel;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +40,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequestDTO request, HttpServletResponse response){
+    public ResponseModel loginUser(@RequestBody LoginRequestDTO request, HttpServletResponse response){
 
        String jwt = userService.validateUser(request);
 
         if (jwt == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return CommonResponse.UNAUTHORIZED("Invalid username or password");
         }
 
         String role = jwtService.extractRole(jwt);
@@ -64,7 +66,7 @@ public class UserController {
         responseBody.put("message", "Login successful");
         responseBody.put("role", role);
 
-        return ResponseEntity.ok(responseBody);
+        return CommonResponse.OK(responseBody);
     }
 
     @PostMapping("/logout")

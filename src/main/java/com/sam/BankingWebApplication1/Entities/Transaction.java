@@ -1,6 +1,7 @@
 package com.sam.BankingWebApplication1.Entities;
 
 import com.sam.BankingWebApplication1.Enums.TransactionStatus;
+import com.sam.BankingWebApplication1.Enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,10 +18,13 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private String type;
+    private String referenceNumber;
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
     private double amount;
     private LocalDateTime transactionDate = LocalDateTime.now();
     private String receiverAccountNumber;
+    private String senderAccountNumber;
     private double balanceAfterTransaction;
     private String description;
     @ManyToOne

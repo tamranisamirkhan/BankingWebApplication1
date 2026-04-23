@@ -21,6 +21,9 @@ public class CommonResponse {
     public static ResponseModel GONE(Object error){
         return new ResponseModel(null,error,HttpStatus.GONE);
     }
+    public static ResponseModel UNAUTHORIZED(Object error) {
+        return new ResponseModel(null,error,HttpStatus.UNAUTHORIZED);
+    }
 
     public static ResponseModel INTERNAL_SERVER_ERROR(Object error) {
         return new ResponseModel(null,error,HttpStatus.INTERNAL_SERVER_ERROR);

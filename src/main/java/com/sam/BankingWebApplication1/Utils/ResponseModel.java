@@ -2,10 +2,13 @@ package com.sam.BankingWebApplication1.Utils;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 @Data
+@Getter
+@Setter
 public class ResponseModel {
     private LocalDateTime timestamp;
     private Object data;
